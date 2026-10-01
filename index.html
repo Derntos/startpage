@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>David's Start Page</title>
+ 
+<style>
+:root{
+--bg:#0f172a;
+--card:#1e293b;
+--text:#f8fafc;
+--accent:#3b82f6;
+--border:#334155;
+}
+ 
+*{
+margin:0;
+padding:0;
+box-sizing:border-box;
+}
+ 
+body{
+background:var(--bg);
+color:var(--text);
+font-family:Segoe UI,Arial,sans-serif;
+padding:20px;
+}
+ 
+h1{
+margin-bottom:10px;
+}
+ 
+#clock{
+font-size:1.2rem;
+margin-bottom:20px;
+}
+ 
+.container{
+display:grid;
+gap:20px;
+}
+ 
+.card{
+background:var(--card);
+border:1px solid var(--border);
+border-radius:12px;
+padding:15px;
+}
+ 
+.links{
+display:flex;
+gap:10px;
+margin-bottom:10px;
+}
+ 
+.links input{
+flex:1;
+padding:10px;
+}
+ 
+button{
+background:var(--accent);
+color:white;
+border:none;
+padding:10px 14px;
+border-radius:8px;
+cursor:pointer;
+}
+ 
+#savedLinks a{
+display:inline-block;
+margin:5px;
+padding:8px 12px;
+background:#334155;
+color:white;
+text-decoration:none;
+border-radius:6px;
+}
+ 
+.news-grid{
+display:grid;
+grid-template-columns:repeat(auto-fit,minmax(300px,1fr));
+gap:20px;
+}
+ 
+.news-list li{
+margin-bottom:8px;
+}
+ 
+.news-list a{
+color:#93c5fd;
+text-decoration:none;
+}
+ 
+iframe{
+width:100%;
+height:600px;
+border:none;
+border-radius:10px;
+}
+ 
+@media(max-width:768px){
+iframe{
+height:400px;
+}
+}
+</style>
+</head>
+ 
+<body>
+ 
+<h1>🏠 David's Dashboard</h1>
+ 
+<div id="clock"></div>
+ 
+<div class="container">
+ 
+<div class="card">
+<h2>Favorite Websites</h2>
+<br>
+ 
+<div class="links">
+<input id="siteName" placeholder="Site Name">
+<input id="siteUrl" placeholder="https://">
+<button onclick="saveLink()">Add</button>
+</div>
+ 
+<div id="savedLinks"></div>
+</div>
+ 
+<div class="card">
+<h2>🇺🇸 U.S. Weather Radar</h2>
+<br>
+ 
+<iframe
+src="https://embed.windy.com/embed2.html?lat=39.50&lon=-98.35&zoom=4&level=surface&overlay=radar&menu=&message=&marker=&calendar=&pressure=&type=map&location=coordinates&detail=&detailLat=39.50&detailLon=-98.35">
+</iframe>
+ 
+</s="news-grid">
+ 
+<div class="card">
+<h2>MSN</h2>
+<ul id="msn" class="news-list"></ul>
+</div>
+ 
+<div class="card">
+<h2>BBC</h2>
+<ul id="bbc" class="news-list"></ul>
+</div>
+ 
+<div class="card">
+<h2>NPR</h2>
+<ul id="npr" class="news-list"></ul>
+</div>
+ 
+<div class="card">
+<h2>Politico</h2>
+<ul id="politico" class="news-list"></ul>
+</div>
+ 
+</div>
+ 
+</div>
+ 
+<script>
+ 
+function updateClock(){
+const now = new Date();
+document.getElementById('clock').innerHTML =
+now.toLocaleDateString() +
+" | " +
+now.toLocaleTimeString();
+}
+ 
+setInterval(updateClock,1000);
+updateClock();
+ 
+function saveLink(){
+ 
+let name = document.getElementById('siteName').value;
+let url = document.getElementById('siteUrl').value;
+ 
+if(!url.startsWith('http')){
+url='https://' + url;
+}
+ 
+let links = JSON.parse(localStorage.getItem('links') || '[]');
+ 
+links.push({name,url});
+ 
+localStorage.setItem('links',JSON.stringify(links));
+ 
+loadLinks();
+ 
+document.getElementById('siteName').value='';
+document.getElementById('siteUrl').value='';
+}
+ 
+function loadLinks(){
+ 
+let links = JSON.parse(localStorage.getItem('links') || '[]');
+ 
+let html='';
+ 
+links.forEach(link=>{
+html += `<a href="${link.url}" target="_blank">${link.name}</a>`;
+});
+ 
+document.getElementById('savedLinks').innerHTML=html;
+}
+ 
+loadLinks();
+ 
+async function loadFeed(feedUrl,target){
+ 
+try{
+ 
+const rss2json =
+'https://api.rss2json.com/v1/api.json?rss_url=' +
+encodeURIComponent(feedUrl);
+ 
+const response = await fetch(rss2json);
+ 
+const data = await response.json();
+ 
+let html='';
+ 
+data.items.slice(0,5).forEach(item=>{
+html += `
+<li>
+<a href="${item.link}" target="_blank">
+${item.title}
+</a>
+</li>`;
+});
+ 
+document.getElementById(target).innerHTML=html;
+ 
+} catch(err){
+document.getElementById(target).innerHTML =
+'<li>Unable to load news feed.</li>';
+}
+}
+ 
+loadFeed(
+'https://www.msn.com/en-us/news/rss',
+'msn'
+);
+ 
+loadFeed(
+'https://feeds.bbci.co.uk/news/rss.xml',
+'bbc'
+);
+ 
+loadFeed(
+'https://feeds.npr.org/1001/rss.xml',
+'npr'
+);
+ 
+loadFeed(
+'https://www.politico.com/rss/politics08.xml',
+'politico'
+);
+ 
+</script>
+ 
+</body>
+</html>
+``
